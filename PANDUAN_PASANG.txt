@@ -94,3 +94,12 @@ UJIAN PENERIMAAN SELEPAS DEPLOY
 - Logout: fungsi admin tidak boleh digunakan tanpa sesi sah.
 - Uji telefon, cetakan/PDF dan CSV sebelum edaran kepada ibu bapa.
 Gunakan data rekaan untuk ujian, kemudian batalkan semua rekod ujian.
+
+KEMAS KINI REKA BENTUK
+Paparan disesuaikan dengan laman rujukan Canva: latar biru-ungu, header
+kelabu metalik, nama sekolah emas, menu tab dan kad panduan.
+Kekalkan nama/lencana sekolah mengikut Tetapan Admin. Lencana sekolah
+rujukan tidak disalin kerana identiti sekolah mengikut tetapan anda.
+Untuk mengemas kini sistem sedia ada: ganti fail HTML Index dalam Apps Script
+dan index.html di GitHub, kemudian deploy New version bagi Apps Script.
+Backend dan data sedia ada dikekalkan; tidak perlu jalankan setup semula.
