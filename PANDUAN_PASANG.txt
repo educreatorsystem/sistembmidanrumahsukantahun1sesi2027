@@ -1,0 +1,96 @@
+TEMPAHAN BAJU SUKAN TAHUN 1 SESI 2027
+PAKEJ GOOGLE APPS SCRIPT + GITHUB
+
+STATUS
+Kod telah disediakan dengan ID Sheet dan URL deployment yang diberikan.
+Kod BELUM dipasang ke projek Google Apps Script anda. Mengubah fail ZIP atau
+GitHub sahaja tidak akan mengemas kini backend deployment Google.
+
+PEMASANGAN (sekali sahaja)
+1. Buka Google Sheet:
+   https://docs.google.com/spreadsheets/d/1ARQfvtVDyjO_jeKnv1aGetDQVJzUQdmghq7JLwaLljQ/edit
+2. PRIVASI: File > Share > Publish to web > Stop publishing.
+   Hentikan penerbitan CSV sebelum menggunakan data sebenar. Pastikan akses
+   perkongsian Sheet ialah Restricted dan hanya pegawai diberi kebenaran.
+   Jangan terbitkan tab Tempahan2027_Private atau keseluruhan dokumen.
+3. Extensions > Apps Script. Gunakan projek yang memiliki deployment URL
+   sedia ada. Buat salinan kod lama dahulu jika projek mempunyai fungsi lain.
+4. Gantikan Code.gs dengan Code.gs dalam pakej.
+5. Tambah fail HTML bernama Index (huruf besar I). Tampal Index.html.
+6. Project Settings > Show appsscript.json. Tampal kandungan appsscript.json.
+7. Pilih fungsi setup, klik Run dan benarkan akses Google Sheet.
+   setup hanya mencipta tab khas dan akaun awal; tidak memadam tab asal.
+   Kata laluan disimpan sebagai PBKDF2-HMAC-SHA256, salt rawak, 100,000 iterasi.
+   setup/login mungkin mengambil masa kerana pengiraan hash.
+8. Deploy > Manage deployments > pilih deployment yang URL-nya diberikan
+   > Edit (pensel) > Version: New version > Execute as: Me
+   > Who has access: Anyone > Deploy.
+   URL deployment kekal jika mengedit deployment yang sama.
+   Jika terpaksa mencipta deployment baharu, tukar href dalam index.html.
+9. Buka URL /exec. Log Masuk Admin menggunakan akaun awal yang anda berikan.
+   Tukar kata laluan melalui Tetapan. Penukaran membatalkan semua sesi admin.
+10. Isi nama/lencana sekolah, URL gambar HTTPS, harga, kelas, saiz serta ukuran
+    sebenar pembekal dan unit cm/inci. Ukuran tidak diisi secara andaian.
+    Susun saiz dengan butang Naik/Turun. Gunakan nyahaktif untuk saiz lama.
+11. Tetapkan tarikh buka/tutup, kebenaran pembetulan dan tandakan
+    "Maklumat pembekal telah disahkan". Simpan.
+
+GITHUB PAGES
+Muat naik HANYA index.html ke repositori GitHub Pages.
+Fail itu membuka sistem Apps Script melalui butang Buka Sistem Tempahan.
+JANGAN muat naik Code.gs, Index.html, appsscript.json atau dokumen dalaman
+ke repositori awam. Pautan GitHub ialah pintu masuk; sistem sebenar beroperasi
+dalam Apps Script untuk komunikasi google.script.run tanpa masalah CORS.
+Jangan menggunakan CSV awam sebagai sumber senarai tempahan.
+
+CARA GUNA IBU BAPA
+Buat Tempahan > lengkapkan maklumat > Tambah Saiz jika perlu > Semak Ringkasan
+> Sahkan & Hantar. Resit hanya muncul selepas SpreadsheetApp.flush berjaya.
+Simpan rujukan dan gunakan nombor telefon sama untuk Semak Tempahan.
+Cetak / Simpan PDF membuka dialog cetakan: pilih Save as PDF.
+Pembetulan mengekalkan harga asal dan mengembalikan status kepada Menunggu.
+MyKid tidak boleh diubah oleh ibu bapa; admin boleh membetulkannya.
+Jika rujukan hilang, hubungi sekolah; admin cari mengikut nama.
+
+ADMIN
+Dashboard: murid unik/MyKid, tempahan aktif, jumlah helai, nilai, saiz popular,
+kemas kini terakhir. Menunggu dan Disahkan kedua-duanya dikira aktif.
+Senarai: penapis kelas/saiz/status dan carian nama/rujukan, CSV mengikut penapis.
+Lihat / Sunting: paparkan butiran lengkap, edit, ubah status dan sahkan ringkasan.
+Pembatalan memerlukan pengesahan tambahan.
+Analisis: kuantiti helai, murid unik setiap saiz, peratus dan carta bar.
+Rumusan Pembekal: tiada data peribadi, A4, PDF melalui dialog cetakan dan CSV.
+Selepas operasi admin, data dimuat semula. Gunakan Muat Semula untuk rekod
+yang dihantar dari peranti lain. Tiada polling berterusan.
+
+KESELAMATAN & HAD
+Setiap operasi admin diperiksa pada backend. Token sesi hanya dalam memori
+halaman; muat semula memerlukan login. Tamat selepas 30 minit tanpa akses
+backend; paparan turut dikunci selepas 30 minit tidak aktif. Logout membatalkan
+sesi pada pelayan. Login dikunci 15 minit selepas 5 kegagalan (global).
+Semakan ibu bapa memerlukan rujukan rawak dan telefon tepat; cubaan bagi
+pasangan sama dihadkan. Rujukan hendaklah disimpan secara peribadi.
+MyKid disimpan sebagai teks dalam tab khas; CSV menambah awalan petikan
+untuk mengekalkan sifar depan apabila dibuka menggunakan Excel.
+Operasi dikunci menggunakan ScriptLock: semakan duplikasi dan tulis atomik
+antara permintaan sistem. Jangan edit tab data JSON secara manual.
+Tiada data murid disimpan dalam localStorage atau dihantar melalui URL.
+Gambar menggunakan URL HTTPS luaran; gunakan gambar milik sekolah.
+Sistem berskala urusan sekolah, tertakluk kuota Apps Script / Script Properties.
+Jangan muat naik gambar base64 ke tetapan. Jumlah tetapan maksimum 8.5 KB.
+Ujian mock Node telah lulus; deployment sebenar dan cetakan peranti anda
+masih perlu diuji selepas pemasangan. Tiada tuntutan sambungan langsung
+berjaya dibuat sebelum kod ini dideploy pada akaun pemilik.
+
+UJIAN PENERIMAAN SELEPAS DEPLOY
+- Tetapkan harga ujian RM25, dua saiz dengan ukuran sebenar.
+- Murid A: saiz pertama 2 helai + saiz kedua 1 helai = 3 helai / RM75.
+- Murid B: saiz pertama 1 helai = RM25.
+- Analisis: saiz pertama 3 helai (75%), saiz kedua 1 helai (25%), 2 murid unik.
+- Hantar MyKid A sekali lagi: disekat; guna Semak Tempahan.
+- Semak dengan telefon salah: ditolak.
+- Batalkan A: tinggal 1 helai / 1 murid dalam analisis.
+- Tutup tarikh: tempahan baharu/pembetulan ditolak; semakan masih berfungsi.
+- Logout: fungsi admin tidak boleh digunakan tanpa sesi sah.
+- Uji telefon, cetakan/PDF dan CSV sebelum edaran kepada ibu bapa.
+Gunakan data rekaan untuk ujian, kemudian batalkan semua rekod ujian.
