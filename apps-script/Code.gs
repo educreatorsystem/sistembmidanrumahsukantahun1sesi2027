@@ -1,64 +1,212 @@
-/* BACKEND SAHAJA. Jangan muat naik fail ini ke repositori GitHub awam. */
-const P=PropertiesService.getScriptProperties();
-function setup(){
- if(P.getProperty('PASSWORD'))throw Error('Sistem telah disediakan.');
- const password=P.getProperty('INITIAL_PASSWORD');if(!password||password.length<8)throw Error('Tetapkan INITIAL_PASSWORD dalam Script Properties (minimum 8 aksara).');
- const ss=SpreadsheetApp.create('Tempahan Baju Sukan SK Sungai Tiram 2027');
- ss.getSheets()[0].setName('Orders').appendRow(['Reference','JSON']);
- P.setProperty('SHEET_ID',ss.getId());setPassword_(password);P.deleteProperty('INITIAL_PASSWORD');
- P.setProperty('SETTINGS',JSON.stringify({school:'SK Sungai Tiram',logo:'',image:'',price:0,open:false,sizesReady:false,allowEdit:true,opens:'',closes:'',unit:'cm',classes:[],instructions:'Sila pilih saiz mengikut ukuran pembekal.',sizes:['24','26','28','30','32','34','36'].map(s=>({size:s,chest:'',length:'',active:true}))}));
- console.log('Pangkalan data: '+ss.getUrl());
+/* SKST 2027. Install all three .gs files in the SAME private Apps Script project. */
+var SKST = { version: '3.0.0-pin', build: 'setup-fix-1', sheetId: '1aIVl4toXjKncxGT75oV-GNKwdVEOFMUINIu0Lc2lUAI', prefix: 'SKST27_' };
+var TABLES = {
+  MURID: ['StudentID', 'Nama', 'Kumpulan', 'Aktif'],
+  REKOD: ['StudentID', 'PayloadJSON', 'DikemasKini'],
+  AKSES: ['StudentID', 'Salt', 'HashPIN', 'AuthVersion'],
+  PIN_EDARAN: ['StudentID', 'Nama', 'Kumpulan', 'PIN'],
+  AGIHAN: ['RunID', 'StudentID', 'Rumah'],
+  PROSES: ['RunID', 'Tarikh', 'Status', 'Seed', 'VersiAlgoritma', 'Revision', 'RingkasanJSON', 'Ralat'],
+  SNAPSHOT: ['RunID', 'StudentID', 'PayloadJSON'],
+  AUDIT: ['Tarikh', 'Pelaku', 'Tindakan', 'StudentID', 'Sebab', 'ButiranJSON']
+};
+function props_() { return PropertiesService.getScriptProperties(); }
+function db_() { return SpreadsheetApp.openById(SKST.sheetId); }
+function table_(key) { var s = db_().getSheetByName(SKST.prefix + key); if (!s) throw new Error('Pemasangan belum lengkap. Jalankan sediakanSistem dahulu.'); return s; }
+function rows_(key) { var s = table_(key); return s.getLastRow() < 2 ? [] : s.getRange(2, 1, s.getLastRow() - 1, TABLES[key].length).getValues(); }
+function append_(key, values) { if (!values.length) return; var s = table_(key), start = s.getLastRow() + 1, end = start + values.length - 1; if (end > s.getMaxRows()) s.insertRowsAfter(s.getMaxRows(), end - s.getMaxRows()); s.getRange(start, 1, values.length, TABLES[key].length).setValues(values); }
+function now_() { return new Date().toISOString(); }
+function today_() { return Utilities.formatDate(new Date(), 'Asia/Kuala_Lumpur', 'yyyy-MM-dd'); }
+function state_() { return JSON.parse(props_().getProperty('SKST27_STATE') || '{"revision":0}'); }
+function setState_(s) { props_().setProperty('SKST27_STATE', JSON.stringify(s)); }
+function locked_(fn) { var lock = LockService.getScriptLock(); if (!lock.tryLock(30000)) throw new Error('Sistem sedang memproses rekod lain. Sila cuba semula.'); try { return fn(); } finally { lock.releaseLock(); } }
+function uuid_() { return Utilities.getUuid().replace(/-/g, ''); }
+function hash_(value) { return Utilities.computeHmacSha256Signature(String(value), props_().getProperty('SKST27_PEPPER')).map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join(''); }
+function equal_(a, b) { a = String(a || ''); b = String(b || ''); var diff = a.length ^ b.length; for (var i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i % Math.max(1, b.length)); return diff === 0; }
+function pin_() {
+  var letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ', digits = '23456789', all = letters + digits, bytes = uuid_(), out = letters[parseInt(bytes.slice(0, 2), 16) % letters.length] + digits[parseInt(bytes.slice(2, 4), 16) % digits.length];
+  for (var i = 0; i < 4; i++) out += all[parseInt(bytes.slice(4 + i * 2, 6 + i * 2), 16) % all.length];
+  return out;
 }
-function sha_(s){return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s,Utilities.Charset.UTF_8).map(x=>('0'+((x+256)%256).toString(16)).slice(-2)).join('')}
-function hash_(pw,salt){let h=salt+pw;for(let i=0;i<2000;i++)h=sha_(h+salt);return h}
-function setPassword_(pw){const salt=Utilities.getUuid();P.setProperty('SALT',salt);P.setProperty('PASSWORD',hash_(pw,salt));P.setProperty('AUTH_VERSION',Utilities.getUuid())}
-function password_(pw){return hash_(String(pw||''),P.getProperty('SALT'))===P.getProperty('PASSWORD')}
-function cache_(){return CacheService.getScriptCache()}
-function throttle_(key,max){const c=cache_(),k='rate:'+sha_(key),n=Number(c.get(k)||0);if(n>=max)throw Error('Terlalu banyak cubaan. Cuba semula selepas 10 minit.');c.put(k,String(n+1),600)}
-function auth_(t){const c=cache_(),k='session:'+sha_(String(t||''));if(c.get(k)!==P.getProperty('AUTH_VERSION'))throw Error('Sesi admin tamat. Sila log masuk semula.');c.put(k,P.getProperty('AUTH_VERSION'),1800)}
-function sheet_(){return SpreadsheetApp.openById(P.getProperty('SHEET_ID')).getSheetByName('Orders')}
-function all_(){const s=sheet_();return s.getLastRow()<2?[]:s.getRange(2,2,s.getLastRow()-1,1).getValues().map(r=>JSON.parse(r[0]))}
-function save_(o){const s=sheet_(),n=s.getLastRow();if(n>1){const rows=s.getRange(2,1,n-1,1).getValues();for(let i=0;i<rows.length;i++)if(rows[i][0]===o.ref){s.getRange(i+2,2).setValue(JSON.stringify(o));return}}s.appendRow([o.ref,JSON.stringify(o)])}
-function settings_(){if(!P.getProperty('SETTINGS'))throw Error('Backend belum disediakan. Jalankan setup.');return JSON.parse(P.getProperty('SETTINGS'))}
-function phone_(x){return String(x||'').replace(/\D/g,'').replace(/^60/,'0')}
-function required_(x,n,max){x=String(x||'').trim();if(!x||x.length>(max||120))throw Error(n+' tidak sah.');return x}
-function open_(s){const d=Utilities.formatDate(new Date(),'Asia/Kuala_Lumpur','yyyy-MM-dd');return s.open&&s.sizesReady&&(!s.opens||d>=s.opens)&&(!s.closes||d<=s.closes)}
-function checked_(d,s){
- const o={name:required_(d.name,'Nama murid'),mykid:required_(d.mykid,'MyKid',12),className:required_(d.className,'Kelas'),guardian:required_(d.guardian,'Nama penjaga'),phone:phone_(d.phone),notes:String(d.notes||'').slice(0,500)};
- if(!/^\d{12}$/.test(o.mykid)||!/^0\d{8,11}$/.test(o.phone))throw Error('MyKid atau telefon tidak sah.');
- if(!['Belum ditetapkan'].concat(s.classes).includes(o.className))throw Error('Kelas tidak sah.');
- if(!Array.isArray(d.items)||!d.items.length||d.items.length>30)throw Error('Pilih saiz dan kuantiti.');
- const m={};d.items.forEach(i=>{if(!s.sizes.some(z=>z.active&&z.size===i.size)||!Number.isInteger(Number(i.qty))||i.qty<1||i.qty>100)throw Error('Saiz atau kuantiti tidak sah.');m[i.size]=(m[i.size]||0)+Number(i.qty);if(m[i.size]>100)throw Error('Maksimum 100 helai bagi setiap saiz.');});
- o.items=Object.keys(m).map(size=>({size,qty:m[size]}));o.qty=o.items.reduce((a,i)=>a+i.qty,0);o.unitPrice=s.price;o.amount=Math.round(o.qty*s.price*100)/100;return o;
+function audit_(actor, action, id, reason, details) { append_('AUDIT', [[now_(), actor, action, id || '', reason || '', JSON.stringify(details || {})]]); }
+
+/** Run ONCE as owner. Creates new prefixed tabs; leaves all old tabs untouched. */
+function sediakanSistem() {
+  return locked_(function () {
+    var p = props_(), ss = db_();
+    if (!p.getProperty('SKST27_PEPPER')) p.setProperty('SKST27_PEPPER', uuid_() + uuid_());
+    if (!p.getProperty('SKST27_ADMIN_HASH')) {
+      // First installation only. An existing admin hash is never reset here.
+      // Keep this server file in the school's private Apps Script project.
+      var initial = p.getProperty('ADMIN_INITIAL_PASSWORD') || 'skst@1234';
+      if (initial.length < 8) throw new Error('Nilai ADMIN_INITIAL_PASSWORD terlalu pendek. Isi minimum 8 aksara, atau padam property itu untuk menggunakan akaun awal.');
+      var salt = uuid_(); p.setProperties({ SKST27_ADMIN_SALT: salt, SKST27_ADMIN_HASH: hash_(salt + '|' + initial) }); p.deleteProperty('ADMIN_INITIAL_PASSWORD');
+    }
+    Object.keys(TABLES).forEach(function (k) {
+      var s = ss.getSheetByName(SKST.prefix + k) || ss.insertSheet(SKST.prefix + k), head = TABLES[k];
+      if (s.getLastRow() && JSON.stringify(s.getRange(1, 1, 1, head.length).getValues()[0]) !== JSON.stringify(head)) throw new Error('Struktur tab ' + s.getName() + ' tidak sepadan. Tiada data ditindih.');
+      if (!s.getLastRow()) s.getRange(1, 1, 1, head.length).setValues([head]);
+      s.setFrozenRows(1); s.getRange(1, 1, 1, head.length).setBackground('#123d92').setFontColor('#ffffff').setFontWeight('bold');
+    });
+    if (!rows_('MURID').length) append_('MURID', SKST_STUDENTS.map(function (s) { return [s.id, s.name, s.group, false]; }));
+    var exists = {}; rows_('AKSES').forEach(function (r) { exists[r[0]] = true; });
+    var creds = [], slips = [];
+    SKST_STUDENTS.forEach(function (s) { if (exists[s.id]) return; var pin = pin_(), salt = uuid_(); creds.push([s.id, salt, hash_(salt + '|' + pin), 1]); slips.push([s.id, s.name, s.group, pin]); });
+    append_('AKSES', creds); append_('PIN_EDARAN', slips);
+    var st = state_(); st.installed = true; setState_(st);
+    ss.setSpreadsheetTimeZone('Asia/Kuala_Lumpur');
+    audit_('pemilik', 'PEMASANGAN', '', '', { count: rows_('MURID').length, newPins: slips.length, version: SKST.version });
+    SpreadsheetApp.flush();
+    console.log('Pemasangan selesai. Log masuk admin, semak pratonton dan aktifkan senarai. PIN berada dalam tab SKST27_PIN_EDARAN untuk edaran peribadi.');
+  });
 }
-function doPost(e){let result;const lock=LockService.getScriptLock();try{if(!lock.tryLock(30000))throw Error('Sistem sibuk. Sila cuba semula.');const d=JSON.parse(e.parameter.payload||'{}');result={ok:true,data:route_(d)}}catch(err){result={ok:false,error:err.message||'Permintaan gagal.'}}finally{if(lock.hasLock())lock.releaseLock()}return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON)}
-function route_(d){
- const s=settings_();
- if(d.action==='public')return {...s,isOpen:open_(s)};
- if(d.action==='login'){throttle_('login',15);if(d.username!=='admin'||!password_(d.password))throw Error('Username atau kata laluan tidak sah');const token=Utilities.getUuid()+Utilities.getUuid();cache_().put('session:'+sha_(token),P.getProperty('AUTH_VERSION'),1800);return {token}}
- if(d.action==='create'){
- if(!open_(s))throw Error('Tempahan belum dibuka atau telah ditutup.');
- const o=checked_(d,s),orders=all_();const duplicate=orders.find(x=>x.mykid===o.mykid&&x.status!=='Dibatalkan');
- if(duplicate){if(duplicate.requestId===d.requestId&&duplicate.phone===o.phone)return duplicate;throw Error('MyKid ini mempunyai tempahan aktif. Gunakan Semak Tempahan atau hubungi sekolah.');}
- o.ref='SKST-'+Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase();o.created=new Date().toISOString();o.updated=o.created;o.status='Baharu';o.requestId=required_(d.requestId,'ID permintaan');save_(o);return o;
- }
- if(d.action==='lookup'||d.action==='parentEdit'){
- throttle_('lookup:'+String(d.ref),30);const o=all_().find(x=>x.ref===String(d.ref||'').toUpperCase()&&x.phone===phone_(d.phone));if(!o)throw Error('Tempahan tidak ditemui. Semak nombor rujukan dan telefon.');
- if(d.action==='lookup')return o;
- if(!s.allowEdit||!open_(s)||o.status==='Dibatalkan')throw Error('Pembetulan tidak dibenarkan. Hubungi sekolah.');
- const edited=checked_(d.order,s);if(edited.mykid!==o.mykid)throw Error('MyKid tidak boleh ditukar.');Object.assign(o,edited,{updated:new Date().toISOString(),status:'Baharu'});save_(o);return o;
- }
- auth_(d.token);
- if(d.action==='logout'){cache_().remove('session:'+sha_(d.token));return true}
- if(d.action==='adminData')return {settings:s,orders:all_()};
- if(d.action==='password'){if(!password_(d.oldPassword))throw Error('Kata laluan semasa salah.');if(String(d.newPassword||'').length<10)throw Error('Minimum 10 aksara.');setPassword_(d.newPassword);return true}
- if(d.action==='status'){const o=all_().find(x=>x.ref===d.ref);if(!o||!['Baharu','Disahkan','Dibatalkan'].includes(d.status))throw Error('Status tidak sah.');if(d.status!=='Dibatalkan'&&all_().some(x=>x.ref!==o.ref&&x.mykid===o.mykid&&x.status!=='Dibatalkan'))throw Error('Murid mempunyai tempahan aktif lain.');o.status=d.status;o.updated=new Date().toISOString();save_(o);return o}
- if(d.action==='adminEdit'){const old=all_().find(x=>x.ref===d.ref);if(!old)throw Error('Rekod tidak ditemui.');const o=checked_(d.order,s);if(old.status!=='Dibatalkan'&&all_().some(x=>x.ref!==old.ref&&x.mykid===o.mykid&&x.status!=='Dibatalkan'))throw Error('MyKid mempunyai tempahan lain.');Object.assign(old,o,{updated:new Date().toISOString()});save_(old);return old}
- if(d.action==='settings'){
- const n=d.settings;if(!n||!Number.isFinite(n.price)||n.price<0||n.price>10000||!Array.isArray(n.sizes)||!n.sizes.length||n.sizes.length>40)throw Error('Harga atau saiz tidak sah.');n.school=required_(n.school,'Nama sekolah');if(!['cm','inci'].includes(n.unit))throw Error('Unit tidak sah.');
- n.classes=Array.from(new Set(n.classes.map(x=>required_(x,'Kelas'))));const seen=new Set();n.sizes.forEach(z=>{z.size=required_(z.size,'Saiz',20);if(seen.has(z.size))throw Error('Saiz berulang.');seen.add(z.size);if(n.sizesReady&&z.active&&(!(Number(z.chest)>0)||!(Number(z.length)>0)))throw Error('Isi ukuran dada dan panjang untuk saiz aktif.');});
- ['logo','image'].forEach(k=>{if(n[k]&&!/^https:\/\//.test(n[k]))throw Error('URL mesti menggunakan https.');});['opens','closes'].forEach(k=>{if(n[k]&&!/^\d{4}-\d{2}-\d{2}$/.test(n[k]))throw Error('Tarikh tidak sah.');});if(n.opens&&n.closes&&n.opens>n.closes)throw Error('Tarikh tutup mendahului tarikh mula.');
- P.setProperty('SETTINGS',JSON.stringify(n));return n;
- }
- throw Error('Tindakan tidak sah.');
+function roster_(all) { return rows_('MURID').filter(function (r) { return all || r[3] === true || String(r[3]).toLowerCase() === 'true'; }).map(function (r) { return { id: String(r[0]), name: String(r[1]), group: String(r[2]), active: r[3] === true || String(r[3]).toLowerCase() === 'true' }; }); }
+function records_() { var out = {}; rows_('REKOD').forEach(function (r) { if (r[0]) { try { out[r[0]] = JSON.parse(r[1]); } catch (_) {} } }); return out; }
+function cleanRecord_(r) { return r ? Object.assign({}, r) : null; }
+function access_(id) { var r = rows_('AKSES').find(function (r) { return String(r[0]) === id; }); if (!r) throw new Error('Akses tidak sah.'); return r; }
+function session_(role, id, authVersion) { var token = uuid_() + uuid_(), ttl = role === 'admin' ? 7200 : 1200; CacheService.getScriptCache().put('session:' + hash_(token), JSON.stringify({ role: role, id: id || '', authVersion: authVersion || 0, expires: Date.now() + ttl * 1000 }), ttl); return { token: token, expiresIn: ttl }; }
+function require_(token, role) {
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/i.test(token)) throw new Error('Sila log masuk semula.');
+  var value = CacheService.getScriptCache().get('session:' + hash_(token)), s = value && JSON.parse(value);
+  if (!s || s.role !== role || s.expires < Date.now()) throw new Error('Sesi tamat. Sila log masuk semula.');
+  if (role === 'guardian' && Number(access_(s.id)[3]) !== s.authVersion) throw new Error('PIN telah dikemas kini. Sila log masuk semula.');
+  return s;
+}
+function throttle_(key, valid) {
+  var p = props_(), k = 'SKST27_LIMIT_' + key, item = JSON.parse(p.getProperty(k) || '{"count":0,"until":0}');
+  if (item.until > Date.now() && item.count >= 5) throw new Error('Terlalu banyak cubaan. Sila tunggu 15 minit.');
+  if (valid) { p.deleteProperty(k); return; }
+  if (item.until < Date.now()) item = { count: 0, until: Date.now() + 900000 };
+  item.count++; p.setProperty(k, JSON.stringify(item)); throw new Error('Nama pengguna atau PIN / kata laluan tidak sah.');
+}
+function assignments_(runId) { var map = {}; if (runId) rows_('AGIHAN').forEach(function (r) { if (r[0] === runId) map[r[1]] = r[2]; }); return map; }
+function run_(runId) { var r = rows_('PROSES').find(function (r) { return r[0] === runId; }); return r ? { id: r[0], created: r[1], status: r[2], seed: r[3], version: r[4], revision: Number(r[5]), result: JSON.parse(r[6] || '{}'), error: r[7] } : null; }
+function dataRows_(roster, records) { return roster.map(function (s) { return Object.assign({}, s, records[s.id]); }); }
+function progress_() { var roster = roster_(false), rec = records_(), done = roster.filter(function (s) { return rec[s.id] && BMI_CORE.complete(rec[s.id], today_()); }).length; return { total: roster.length, complete: done, percent: roster.length ? done / roster.length * 100 : 0 }; }
+function generation_(force, actor, reason) {
+  var st = state_(), roster = roster_(false), rec = records_();
+  if (st.currentRun && !force) return { status: 'existing' };
+  if (!BMI_CORE.ready(roster, rec, today_())) { if (force) throw new Error('Semua murid aktif perlu melengkapkan maklumat dahulu.'); return { status: 'waiting' }; }
+  var runId = 'RUN-' + uuid_(), seed = uuid_(), row = table_('PROSES').getLastRow() + 1;
+  append_('PROSES', [[runId, now_(), 'MEMPROSES', seed, 'stratified-greedy-pair-v1', st.revision, '{}', '']]);
+  try {
+    var snapshot = dataRows_(roster, rec), result = BMI_CORE.allocate(snapshot, seed);
+    append_('SNAPSHOT', snapshot.map(function (s) { return [runId, s.id, JSON.stringify(s)]; }));
+    append_('AGIHAN', roster.map(function (s) { return [runId, s.id, result.assignments[s.id]]; }));
+    SpreadsheetApp.flush();
+    var persisted = assignments_(runId);
+    if (Object.keys(persisted).length !== roster.length || roster.some(function (s) { return BMI_CORE.houses.indexOf(persisted[s.id]) < 0; })) throw new Error('Semakan akhir agihan gagal.');
+    var summary = { capacities: result.capacities, before: result.before, after: result.after, swaps: result.swaps, cuts: result.cuts };
+    table_('PROSES').getRange(row, 3, 1, 6).setValues([['DRAF', seed, result.version, st.revision, JSON.stringify(summary), '']]);
+    audit_(actor, force ? 'JANA_SEMULA' : 'JANA_AUTOMATIK', '', reason, { runId: runId, seed: seed, revision: st.revision });
+    SpreadsheetApp.flush();
+    // Only this final pointer exposes a complete run. Incomplete runs remain invisible.
+    st.currentRun = runId; st.acceptedRevision = st.revision; st.generationError = ''; setState_(st);
+    return { status: 'draft', runId: runId };
+  } catch (e) {
+    table_('PROSES').getRange(row, 3).setValue('GAGAL'); table_('PROSES').getRange(row, 8).setValue(String(e.message).slice(0, 1000));
+    st.generationError = 'Proses agihan gagal. Admin boleh cuba semula.'; setState_(st);
+    return { status: 'failed' };
+  }
+}
+function guardianData_(session) {
+  var s = roster_(false).find(function (s) { return s.id === session.id; }); if (!s) throw new Error('Senarai murid belum aktif.');
+  var st = state_(), rec = records_()[s.id];
+  return { student: { id: s.id, name: s.name, group: s.group }, record: cleanRecord_(rec), house: assignments_(st.publishedRun)[s.id] || null, published: !!st.publishedRun };
+}
+function save_(id, payload, actor, reason) {
+  if (!roster_(false).some(function (s) { return s.id === id; })) throw new Error('Murid tiada dalam senarai induk aktif.');
+  var valid = BMI_CORE.validate(payload, today_()), old = records_()[id];
+  valid.updatedAt = now_(); valid.id = id;
+  audit_(actor, 'SIMPAN_REKOD', id, reason, { previous: old || null, updated: valid });
+  var rows = rows_('REKOD'), index = rows.findIndex(function (r) { return r[0] === id; }), values = [[id, JSON.stringify(valid), valid.updatedAt]];
+  if (index < 0) append_('REKOD', values); else table_('REKOD').getRange(index + 2, 1, 1, 3).setValues(values);
+  var st = state_(); st.revision = (st.revision || 0) + 1; setState_(st); SpreadsheetApp.flush();
+  var allocation = generation_(false, actor, 'Semua rekod lengkap');
+  return { saved: true, record: valid, allocation: allocation, message: 'Maklumat berjaya dihantar. Pembahagian rumah sukan akan dijana selepas semua murid melengkapkan maklumat.' };
+}
+function adminData_() {
+  var st = state_(), all = roster_(true), roster = all.filter(function (s) { return s.active; }), records = records_(), map = assignments_(st.currentRun), run = run_(st.currentRun);
+  return { roster: all, records: records, assignments: map, state: st, run: run, analysis: run ? BMI_CORE.analyse(dataRows_(roster, records).filter(function (r) { return BMI_CORE.complete(r, today_()); }), map) : null, progress: progress_(), version: SKST.version };
+}
+function reason_(p) { var s = String(p.reason || '').trim(); if (s.length < 3 || s.length > 1000) throw new Error('Catatan sebab diperlukan (3–1000 aksara).'); return s; }
+function route_(p) {
+  var a = p.action;
+  if (a === 'login') {
+    var ok = p.username === 'admin' && equal_(hash_(props_().getProperty('SKST27_ADMIN_SALT') + '|' + String(p.password || '')), props_().getProperty('SKST27_ADMIN_HASH'));
+    throttle_('ADMIN', ok); return session_('admin');
+  }
+  if (a === 'unlock') {
+    var id = String(p.studentId || ''); if (!roster_(false).some(function (s) { return s.id === id; })) throw new Error('Senarai murid belum aktif atau murid tidak sah.');
+    var cred = access_(id), pin = String(p.pin || '').trim().toUpperCase();
+    throttle_(id, /^[A-Z0-9]{6}$/.test(pin) && equal_(hash_(cred[1] + '|' + pin), cred[2]));
+    var session = session_('guardian', id, Number(cred[3])); return Object.assign(session, guardianData_({ id: id }));
+  }
+  if (a === 'guardianRead' || a === 'save') {
+    var guard = require_(p.token, 'guardian');
+    return a === 'guardianRead' ? guardianData_(guard) : save_(guard.id, p.payload, 'penjaga:' + guard.id, 'Penghantaran penjaga');
+  }
+  if (a === 'logout') {
+    if (typeof p.token === 'string') CacheService.getScriptCache().remove('session:' + hash_(p.token)); return { loggedOut: true };
+  }
+  require_(p.token, 'admin');
+  if (a === 'adminData') return adminData_();
+  if (a === 'activate') {
+    var all = roster_(true), st = state_();
+    if (all.some(function (s) { return s.active; }) || Object.keys(records_()).length) throw new Error('Senarai sudah aktif; pengaktifan semula dihalang.');
+    if (Number(p.expectedCount) !== all.length || new Set(all.map(function (s) { return s.id; })).size !== all.length || !all.length) throw new Error('Jumlah pratonton tidak sepadan.');
+    audit_('admin', 'AKTIFKAN_DAFTAR', '', 'Pratonton senarai disahkan', { count: all.length });
+    table_('MURID').getRange(2, 4, all.length, 1).setValues(all.map(function () { return [true]; })); st.revision++; setState_(st); return adminData_();
+  }
+  if (a === 'adminSave') return save_(String(p.studentId), p.payload, 'admin', reason_(p));
+  if (a === 'generate') { var result = generation_(true, 'admin', reason_(p)); if (result.status === 'failed') throw new Error('Penjanaan gagal. Draf terdahulu dikekalkan; cuba semula.'); return result; }
+  if (a === 'review') {
+    var st = state_(); if (!st.currentRun || !BMI_CORE.ready(roster_(false), records_(), today_())) throw new Error('Semua rekod dan draf agihan mesti lengkap.');
+    audit_('admin', 'SAHKAN_SEMAKAN', '', reason_(p), { runId: st.currentRun, revision: st.revision }); st.acceptedRevision = st.revision; setState_(st); return { reviewed: true };
+  }
+  if (a === 'publish') {
+    var st = state_(), rs = roster_(false), map = assignments_(st.currentRun);
+    if (!st.currentRun || st.acceptedRevision !== st.revision || !BMI_CORE.ready(rs, records_(), today_()) || Object.keys(map).length !== rs.length || rs.some(function (s) { return !map[s.id]; })) throw new Error('Sila lengkapkan rekod dan sahkan semakan analisis terlebih dahulu.');
+    audit_('admin', 'TERBITKAN', '', 'Disahkan admin', { runId: st.currentRun, revision: st.revision }); st.publishedRun = st.currentRun; setState_(st); return { published: true };
+  }
+  if (a === 'swap') {
+    var reason = reason_(p), st = state_(), map = assignments_(st.currentRun), left = String(p.left), right = String(p.right);
+    if (!map[left] || !map[right] || left === right || map[left] === map[right]) throw new Error('Pilih dua murid daripada rumah berbeza.');
+    // Copy-on-write run: even a failed swap cannot expose half of a change.
+    var roster = roster_(false), rec = records_(), newId = 'RUN-' + uuid_(), current = run_(st.currentRun);
+    var temp = map[left]; map[left] = map[right]; map[right] = temp;
+    append_('AGIHAN', roster.map(function (s) { return [newId, s.id, map[s.id]]; }));
+    append_('SNAPSHOT', dataRows_(roster, rec).map(function (s) { return [newId, s.id, JSON.stringify(s)]; }));
+    append_('PROSES', [[newId, now_(), 'DRAF', current.seed, current.version + '+swap', st.revision, JSON.stringify({ parentRun: st.currentRun, manualSwap: [left, right] }), '']]);
+    audit_('admin', 'TUKAR_PASANGAN', '', reason, { left: left, right: right, parentRun: st.currentRun, runId: newId }); SpreadsheetApp.flush();
+    st.currentRun = newId; st.acceptedRevision = -1; setState_(st); return { swapped: true };
+  }
+  if (a === 'pins') return rows_('PIN_EDARAN').map(function (r) { return { id: r[0], name: r[1], group: r[2], pin: r[3] }; });
+  if (a === 'resetPin') {
+    var reason = reason_(p), id = String(p.studentId), values = rows_('AKSES'), i = values.findIndex(function (r) { return r[0] === id; });
+    if (i < 0) throw new Error('Murid tidak sah.');
+    var pin = pin_(), salt = uuid_(), version = Number(values[i][3]) + 1;
+    audit_('admin', 'RESET_PIN', id, reason, { authVersion: version }); table_('AKSES').getRange(i + 2, 2, 1, 3).setValues([[salt, hash_(salt + '|' + pin), version]]);
+    var slips = rows_('PIN_EDARAN'), j = slips.findIndex(function (r) { return r[0] === id; }); if (j >= 0) table_('PIN_EDARAN').getRange(j + 2, 4).setValue(pin);
+    props_().deleteProperty('SKST27_LIMIT_' + id); return { pin: pin };
+  }
+  if (a === 'audit') return rows_('AUDIT').slice(-300).reverse().map(function (r) { return { date: r[0], actor: r[1], action: r[2], id: r[3], reason: r[4] }; });
+  throw new Error('Tindakan tidak sah.');
+}
+function json_(data) { return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); }
+function doGet(e) {
+  try {
+    var a = (e && e.parameter && e.parameter.action) || 'health';
+    if (a === 'health') return json_({ ok: true, data: { api: 'SKST_BMI', version: SKST.version, build: SKST.build, configured: state_().installed === true } });
+    if (a === 'roster') return json_({ ok: true, data: roster_(false).map(function (s) { return { id: s.id, name: s.name, group: s.group }; }) });
+    if (a === 'progress') return json_({ ok: true, data: progress_() });
+    throw new Error('Akses bacaan awam tidak dibenarkan untuk tindakan ini.');
+  } catch (e) { return json_({ ok: false, error: e.message }); }
+}
+function doPost(e) {
+  try {
+    if (!state_().installed) throw new Error('Pemasangan belum lengkap. Jalankan sediakanSistem.');
+    var raw = e && e.postData && e.postData.contents; if (!raw || raw.length > 24000) throw new Error('Saiz permintaan tidak sah.');
+    var p = JSON.parse(raw); return json_({ ok: true, data: locked_(function () { return route_(p); }) });
+  } catch (e) { return json_({ ok: false, error: String(e.message || 'Permintaan gagal.') }); }
 }

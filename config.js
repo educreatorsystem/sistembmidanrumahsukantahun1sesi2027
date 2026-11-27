@@ -1,1 +1,4 @@
-window.APP_CONFIG = {"apiUrl": "https://script.google.com/macros/s/AKfycbyRnXv-Pph4r3tpAGyo5f6LMfuVCd2g9kNcGltONklF7p676BgMs2Az8OdJcotaqQFw/exec"};
+window.SKST_CONFIG = Object.freeze({
+  apiUrl: 'https://script.google.com/macros/s/AKfycbyO9SCh2dlFiM7SoxIFw9PeJaUkan0WVYFFBuB3fkvhIAWkrOQxTT-RajHdCty-Wk0T/exec',
+  requiredVersion: '3.0.0-pin'
+});

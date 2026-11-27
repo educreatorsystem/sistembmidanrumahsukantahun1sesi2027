@@ -1,0 +1,19 @@
+KEMAS KINI ILUSTRASI HEADER SKST 2027
+
+Jika sistem sudah dipasang, ekstrak ZIP dan kemas kini tiga fail ini
+di repository GitHub yang sama:
+
+1. Gantikan index.html.
+2. Gantikan styles.css.
+3. Tambah assets/ilustrasi-header-bmi.png ke folder assets.
+
+Klik Commit changes, tunggu GitHub Pages selesai membina laman,
+kemudian muat semula halaman. Jika masih melihat header lama,
+muat semula tanpa cache (Ctrl+Shift+R di Windows atau Cmd+Shift+R di Mac).
+
+Gunakan config.js yang sedang digunakan oleh sistem anda supaya
+URL Apps Script pilihan anda dikekalkan. Kemas kini header ini tidak
+memerlukan pemasangan semula Apps Script atau penjanaan PIN baharu.
+
+Ilustrasi disusun di kanan pada komputer dan di atas penerangan
+pada telefon. Saiz berubah mengikut skrin; tajuk dan watak kekal penuh.
