@@ -1,320 +1,148 @@
-PANDUAN MUDAH
-SISTEM BMI DAN PEMBAHAGIAN RUMAH SUKAN
-SK SUNGAI TIRAM - TAHUN 1 SESI 2027
+PANDUAN MUDAH KEMAS KINI SISTEM BMI SKST 2027
+VERSI 4.0.0-tanpa-pin
 
-Panduan untuk pakej:
-SKST_BMI_Rumah_Sukan_2027_PIN_Biru_Merah.zip
+PERUBAHAN VERSI INI
 
-Ikut langkah mengikut urutan. Pemasangan lebih mudah dibuat
-menggunakan komputer.
+1. Ibu bapa terus memilih nama untuk mengisi borang, tanpa PIN.
+2. Sejarah perubatan mempunyai pilihan Tiada atau Ada penyakit.
+3. Jika Ada penyakit dipilih, hanya jenis penyakit perlu dinyatakan.
+4. Soalan ubat, pemantauan dan sekatan aktiviti telah dikeluarkan.
+5. Ilustrasi header, 314 nama murid dan tema biru merah dikekalkan.
+6. Log masuk admin, analisis BMI, eksport dan agihan rumah diteruskan.
 
-Ada dua tempat yang perlu disediakan:
-1. Google Apps Script: menyimpan maklumat ke Google Sheet.
-2. GitHub Pages: memaparkan laman untuk ibu bapa dan admin.
+A. KEMAS KINI APPS SCRIPT DAHULU
 
-Nama 314 murid sudah disediakan dalam pakej. Tidak perlu taip semula
-atau upload Excel melalui dashboard.
+1. Ekstrak ZIP ini dan buka folder apps-script.
+2. Buka projek Apps Script yang sedang digunakan sistem anda.
+3. Simpan salinan kod lama jika diperlukan.
+4. Gantikan SEMUA kandungan Code.gs dengan Code.gs daripada ZIP ini.
+5. Gantikan SEMUA kandungan Core.gs dengan Core.gs daripada ZIP ini.
+6. Pastikan Data.gs masih wujud dalam projek yang sama. Fail Data.gs
+   dalam ZIP mengandungi daftar sebenar yang sama dan boleh digunakan.
+7. Simpan semua fail.
+8. Pilih fungsi sediakanSistem, kemudian klik Run / Jalankan.
+   Fungsi ini mengekalkan akaun admin, daftar aktif dan rekod yang
+   telah disimpan. Ia tidak memadam data atau menjana semula rumah.
+9. Selepas selesai, klik Deploy > Manage deployments.
+10. Pilih deployment yang sedang digunakan dan klik ikon pensel.
+11. Pada Version, pilih New version, kemudian klik Deploy.
 
+PENTING: Code.gs DAN Core.gs mesti dikemas kini bersama. Menampal
+Code.gs sahaja akan menyebabkan mesej Core.gs belum dikemas kini.
+Menekan Save sahaja belum mengemas kini deployment /exec.
 
-LANGKAH 1: BUKA FAIL ZIP
+Jika ini pemasangan pertama:
+- Buka Sheet melalui Extensions > Apps Script.
+- Masukkan Code.gs, Core.gs dan Data.gs daripada folder apps-script.
+- Gunakan kandungan appsscript.json yang disertakan, dengan runtime
+  V8 dan zon masa Asia/Kuala_Lumpur.
+- Jalankan sediakanSistem dan benarkan akses projek sekolah.
+- Buat deployment jenis Web app, Execute as: Me, dengan akses
+  Anyone jika dibenarkan oleh akaun sekolah.
+- Akaun awal: nama pengguna admin, kata laluan skst@1234.
+  Jika akaun admin telah dipasang, gunakan kata laluan sedia ada.
 
-1. Muat turun ZIP yang diberikan.
-2. Ekstrak / unzip fail tersebut.
-   Pada Mac, biasanya klik dua kali pada ZIP.
-   Pada Windows, klik kanan ZIP dan pilih Extract All.
-3. Buka folder hasil ekstrak.
-
-Kenal pasti fail berikut:
-- index.html, styles.css, app.js dan config.js: untuk GitHub.
-- Folder assets: untuk GitHub, bersama kandungannya.
-- Folder apps-script: kod untuk Google Apps Script.
-
-Jangan upload fail ZIP sahaja ke GitHub. Ekstrak dahulu.
-
-
-LANGKAH 2: MASUKKAN KOD KE GOOGLE APPS SCRIPT
-
-1. Log masuk akaun Google yang boleh menyunting Sheet sekolah.
-2. Buka Sheet ini:
+Database yang digunakan:
 https://docs.google.com/spreadsheets/d/1aIVl4toXjKncxGT75oV-GNKwdVEOFMUINIu0Lc2lUAI/edit
 
-3. Klik Extensions, kemudian Apps Script.
-4. Jika ada kod lama, simpan salinannya dahulu.
-5. Dalam folder apps-script yang diekstrak, buka Code.gs
-   menggunakan aplikasi teks seperti Notepad atau editor kod.
-6. Salin SEMUA kandungan Code.gs.
-7. Dalam editor Apps Script, klik Code.gs, padam kandungan lama
-   dalam fail itu dan tampal kod baharu.
-8. Klik tanda + di sebelah Files, pilih Script dan namakan Core.
-   Google akan menjadikannya Core.gs.
-9. Salin semua kandungan apps-script/Core.gs ke fail Core.gs itu.
-10. Ulang cara yang sama untuk Data.gs. Namakan fail baharu Data,
-    kemudian tampal kandungan apps-script/Data.gs.
+B. SEMAK PAUTAN APPS SCRIPT
 
-Pada akhir langkah ini, projek mesti mempunyai KETIGA-TIGA fail:
-- Code.gs
-- Core.gs
-- Data.gs
+1. Buka URL Web app yang berakhir dengan /exec.
+2. Cari teks "version":"4.0.0-tanpa-pin" dan "configured":true.
+3. Jika masih 3.0.0-pin, ulang langkah New version pada deployment
+   yang betul. Pastikan Code.gs dan Core.gs baharu telah disimpan.
+4. Jika URL Apps Script berubah, buka config.js pada komputer dan
+   gantikan nilai apiUrl dengan URL /exec yang baharu.
+5. Jika anda menggunakan URL tersendiri sebelum ini, salin URL itu
+   ke config.js baharu. Jangan tertinggal tetapan sambungan anda.
+6. Nilai requiredVersion perlu kekal 4.0.0-tanpa-pin.
 
-Code.gs sahaja tidak mencukupi. Ketiga-tiganya mesti berada
-dalam projek Apps Script yang sama.
+C. KEMAS KINI FAIL DI GITHUB
 
-Jika ada fail script lama yang turut mengandungi fungsi doGet
-atau doPost, keluarkan kod lama yang bertindih selepas menyimpan
-salinannya. Gunakan fungsi baharu daripada pakej ini.
+1. Buka repository sistem anda.
+2. Muat naik dan gantikan fail berikut daripada ZIP:
+   - index.html
+   - styles.css
+   - app.js
+   - config.js yang mempunyai URL Apps Script anda
+   - folder assets bersama kandungannya
+3. Pastikan index.html berada terus pada halaman utama repository.
+4. Klik Commit changes.
+5. Tunggu GitHub Pages selesai membina laman dan muat semula.
+6. Jika masih melihat borang lama, muat semula tanpa cache:
+   Windows: Ctrl + Shift + R
+   Mac: Cmd + Shift + R
 
-Kemudian tetapkan fail appsscript.json:
-1. Klik Project Settings, iaitu ikon gear.
-2. Tandakan "Show appsscript.json manifest file in editor".
-3. Kembali ke Editor.
-4. Klik appsscript.json yang kini kelihatan.
-5. Gantikan kandungannya dengan kandungan
-   apps-script/appsscript.json daripada pakej.
-6. Simpan semua perubahan.
+Folder apps-script ialah untuk dipasang pada editor Apps Script.
+Ia tidak perlu dimuat naik bagi menjalankan laman GitHub Pages.
 
+D. AKTIFKAN DAFTAR JIKA BELUM AKTIF
 
-LANGKAH 3: MASUKKAN NAMA DAN SEDIAKAN AKAUN ADMIN
-
-Kod yang telah dibaiki tidak memerlukan Script Property tambahan
-untuk pemasangan biasa.
-
-1. Simpan semua fail Code.gs, Core.gs dan Data.gs.
-2. Pada pilihan fungsi di bahagian atas editor, pilih sediakanSistem.
-3. Klik Run / Jalankan.
-4. Jika Google meminta kebenaran untuk projek ini, pilih akaun
-   yang boleh mengakses Sheet dan berikan akses yang diperlukan.
-   Jika akaun sekolah menyekatnya, hubungi pentadbir akaun sekolah.
-5. Tunggu sehingga pelaksanaan selesai tanpa ralat.
-
-Jika akaun admin belum pernah dipasang, akaun awal ialah:
-Nama pengguna: admin
-Kata laluan: skst@1234
-
-Jika akaun admin sudah dipasang dengan kata laluan sendiri,
-kata laluan sedia ada dikekalkan.
-
-Cara semak langkah ini berjaya:
-- Buka semula Google Sheet.
-- Tab baharu seperti SKST27_MURID dan SKST27_PIN_EDARAN akan muncul.
-- Senarai 314 nama murid dimasukkan, menunggu pengesahan admin.
-- PIN sebenar setiap murid dijana oleh sistem.
-
-Pilihan jika mahu kata laluan awal sendiri:
-Sebelum pemasangan PERTAMA sahaja, buka Project Settings >
-Script Properties > Add script property. Isi:
-Property: ADMIN_INITIAL_PASSWORD
-Value: kata laluan pilihan sendiri, minimum 8 aksara.
-Kemudian simpan dan jalankan sediakanSistem.
-Jika tidak mahu pilihan ini, abaikan sahaja.
-
-Jika property itu hilang selepas pemasangan berjaya, itu normal.
-Sistem sudah menyimpan pengesahan kata laluan tersebut.
-
-Pemasangan ini tidak memadam tab lama. Rekod daripada sistem lama
-tidak dipindahkan secara automatik. Simpan tab lama jika masih perlu.
-
-
-LANGKAH 4: DAPATKAN PAUTAN APPS SCRIPT YANG BAHARU
-
-Untuk memudahkan pemasangan ini, buat deployment baharu:
-
-1. Klik Deploy di penjuru kanan atas.
-2. Pilih New deployment.
-3. Pilih jenis Web app. Jika perlu, klik ikon gear untuk memilihnya.
-4. Isikan Description, contohnya: BMI SKST 2027 PIN.
-5. Pada Execute as, pilih Me, iaitu akaun pemilik/editor tadi.
-6. Pada Who has access, pilih Anyone jika dibenarkan akaun sekolah.
-7. Klik Deploy dan lengkapkan kebenaran yang diminta.
-8. Salin Web app URL yang diberikan. Gunakan pautan berakhir /exec.
-
-Sekarang sambungkan laman kepada pautan ini:
-1. Buka config.js daripada folder pakej pada komputer.
-2. Cari baris apiUrl.
-3. Gantikan URL lama di antara tanda petik dengan Web app URL
-   yang baru disalin. Kekalkan tanda petik dan koma asal.
-4. Simpan config.js.
-
-Contoh bentuk baris tersebut:
-apiUrl: 'TAMPAL_WEB_APP_URL_BAHARU_DI_SINI',
-
-Jangan tukar requiredVersion. Nilainya perlu kekal 3.0.0-pin.
-
-Cara semak deployment:
-1. Buka Web app URL tadi dalam pelayar.
-2. Halaman akan menunjukkan teks ringkas.
-3. Cari "version":"3.0.0-pin", "build":"setup-fix-1"
-   dan "configured":true.
-4. Jika masih menunjukkan 1.1.0, pautan yang dibuka ialah versi lama.
-   Gunakan Web app URL yang baru dibuat tadi dalam config.js.
-
-UNTUK KEMAS KINI KOD PADA MASA AKAN DATANG:
-Jika mahu mengekalkan URL deployment yang sama, selepas menyimpan
-kod pilih Deploy > Manage deployments > ikon pensel > New version
-> Deploy. Menekan Save sahaja tidak mengemas kini laman /exec.
-
-
-LANGKAH 5: MUAT NAIK LAMAN KE GITHUB
-
-1. Buka GitHub dan pilih repository untuk sistem ini.
-   Jika belum ada, buat repository baharu dahulu.
-2. Klik Add file, kemudian Upload files.
-3. Muat naik fail berikut daripada folder yang diekstrak:
-
-   index.html
-   styles.css
-   app.js
-   config.js, iaitu fail yang sudah dikemas kini pada Langkah 4
-   folder assets, bersama semua kandungannya
-
-4. Pastikan index.html kelihatan terus pada halaman utama repository.
-   Jangan letakkan semuanya di dalam satu lagi folder tambahan.
-5. Klik Commit changes untuk menyimpan fail.
-6. Buka Settings, kemudian Pages.
-7. Pada Source, pilih Deploy from a branch.
-8. Pilih branch tempat fail disimpan, biasanya main.
-9. Pilih folder / (root), kemudian klik Save.
-10. Tunggu GitHub selesai menyediakan laman, kemudian buka
-    pautan laman yang dipaparkan dalam bahagian Pages.
-
-Folder apps-script tidak perlu dimuat naik untuk laman berfungsi.
-Kandungannya sudah dipasang di Google Apps Script pada Langkah 2.
-
-
-LANGKAH 6: AKTIFKAN 314 NAMA DAN DAPATKAN PIN
-
-1. Buka laman GitHub Pages sistem tadi.
-2. Klik Ruangan Admin.
-3. Log masuk menggunakan:
-
-   Nama pengguna: admin
-   Kata laluan:   skst@1234
-
-   Jika memilih kata laluan sendiri pada Langkah 3, gunakan
-   kata laluan sendiri itu.
-
-4. Semak pratonton nama dan kumpulan. Bilangan sepatutnya:
+1. Buka laman dan klik Ruangan Admin.
+2. Log masuk menggunakan akaun admin sedia ada.
+3. Jika pratonton daftar muncul, semak jumlah 314 murid:
    Kumpulan 1 dan 2: 40 murid setiap kumpulan.
    Kumpulan 3 hingga 8: 39 murid setiap kumpulan.
-   Jumlah keseluruhan: 314 murid.
-5. Klik Sahkan & Aktifkan 314 Murid.
-6. Klik Muat Turun PIN Penjaga.
-7. Fail senarai PIN akan dimuat turun. Buka menggunakan Excel
-   atau aplikasi spreadsheet jika mahu melihat atau mencetaknya.
-8. Berikan PIN setiap murid hanya kepada penjaga murid berkenaan.
+4. Klik Sahkan & Aktifkan 314 Murid.
+5. Jika senarai sudah aktif, teruskan menggunakan dashboard.
 
-PIN ialah gabungan 6 aksara huruf dan nombor.
-Contoh format sahaja: AB2345. Ini BUKAN PIN sebenar mana-mana murid.
-Penjaga tidak mencipta PIN sendiri; gunakan PIN yang dijana sistem.
+E. CARA IBU BAPA MENGISI
 
-Jika penjaga terlupa PIN:
-1. Admin klik nama murid dalam senarai rekod.
-2. Isi sebab, contohnya "Penjaga terlupa PIN".
-3. Klik Jana PIN Baharu.
-4. Berikan PIN baharu kepada penjaga. PIN lama tidak lagi sah.
+1. Taip sekurang-kurangnya dua huruf nama anak.
+2. Pilih nama daripada cadangan yang dipaparkan.
+3. Kumpulan asal keluar secara automatik dan borang terus terbuka.
+4. Isi berat, tinggi dan tarikh pengukuran.
+5. Pada sejarah perubatan, pilih:
+   Tiada: ruangan jenis penyakit tidak perlu diisi.
+   Ada penyakit: nyatakan jenis penyakit, contohnya Asma atau Alahan.
+6. Tandakan pengakuan dan klik Hantar Maklumat.
+7. Tunggu mesej berjaya sebelum menutup halaman.
 
+Memilih nama lain mengosongkan input anak sebelumnya. Nama mesti
+dipilih daripada cadangan; menaip nama sendiri sahaja tidak cukup.
+Penghantaran semula mengemas kini rekod bagi StudentID yang sama.
+Carian nama membuka borang kosong dan tidak memaparkan ukuran atau
+sejarah perubatan yang pernah dihantar. Admin boleh menyemak rekod.
 
-LANGKAH 7: CARA IBU BAPA MENGISI BORANG
+F. PEMBAHAGIAN RUMAH SUKAN
 
-1. Buka pautan GitHub Pages yang diberikan sekolah.
-2. Taip sekurang-kurangnya dua huruf nama anak.
-3. Pilih nama anak daripada cadangan yang keluar.
-4. Kumpulan anak akan dipaparkan secara automatik.
-5. Masukkan PIN daripada sekolah dan klik Buka borang / Semak.
-6. Isi berat dalam kg, tinggi dalam cm dan tarikh pengukuran.
-7. Jawab semua soalan kesihatan. Jika memilih Ada atau Ya,
-   lengkapkan penerangan yang diminta.
-8. Tandakan pengakuan dan klik Hantar Maklumat.
-9. Tunggu mesej berjaya sebelum menutup halaman.
+- Draf agihan dijana apabila semua murid aktif mempunyai rekod lengkap.
+- Bagi 314 murid, kapasiti rumah ialah 79, 79, 78 dan 78.
+- Pengimbangan menggunakan bilangan ahli, taburan BMI, kumpulan asal
+  dan bilangan murid yang melaporkan penyakit. Jenis penyakit tidak
+  ditafsirkan sebagai tahap kebolehan sukan.
+- Admin semak draf, klik Sahkan Semakan dan Terbitkan Keputusan.
+- Penjaga boleh memilih nama anak untuk melihat rumah yang diterbitkan.
+- Pindaan rekod selepas agihan tidak menukar semua rumah secara automatik.
 
-Jika butang Hantar Maklumat masih tidak aktif, semak medan kosong,
-soalan susulan, pengakuan dan pengesahan ukuran jika diminta.
+G. REKOD LAMA DAN PRIVASI
 
-Jika penghantaran gagal, input dikekalkan. Cuba semula.
-Penghantaran semula mengemas kini rekod anak yang sama.
+- Struktur database dan StudentID asal dikekalkan.
+- Rekod perubatan format lama masih dibaca dan dikira lengkap jika sah.
+- Tab akses lama boleh kekal dalam Sheet; versi ini tidak menggunakannya.
+- Maklumat kesihatan terdahulu hanya boleh dibaca melalui akaun admin.
+- Tanpa pengesahan penjaga, sesiapa yang mempunyai pautan dan memilih
+  nama boleh menghantar atau mengemas kini rekod bagi nama itu.
+- Simpan database Google Sheet sebagai fail persendirian. Jangan
+  terbitkan rekod kesihatan melalui Publish to web atau CSV awam.
 
+H. JIKA ADA RALAT
 
-LANGKAH 8: SEMAK DAN TERBITKAN RUMAH SUKAN
+Core.gs belum dikemas kini:
+Salin semula Core.gs daripada ZIP ini, simpan dan deploy New version.
 
-1. Admin semak kemajuan dalam dashboard.
-2. Selagi belum semua 314 murid lengkap, agihan belum dijana.
-3. Apabila 314 murid lengkap, sistem menjana draf agihan automatik.
-4. Admin semak ahli dan analisis setiap rumah.
-5. Klik Sahkan Semakan dan lengkapkan catatan yang diminta.
-6. Klik Terbitkan Keputusan dan sahkan tindakan.
-7. Selepas itu, penjaga boleh membuka semula akses menggunakan
-   nama anak dan PIN yang sama untuk melihat rumah sukan.
+Versi masih 3.0.0-pin:
+Semak deployment dan apiUrl dalam config.js. Gunakan URL /exec yang
+memaparkan versi 4.0.0-tanpa-pin.
 
-Jika agihan gagal dijana, admin boleh menekan Jana / Jana Semula
-selepas memastikan semua rekod lengkap.
+Butang hantar tidak aktif:
+Semak nama telah dipilih, berat/tinggi/tarikh lengkap, pilihan Tiada
+atau Ada penyakit dijawab, jenis penyakit diisi jika Ada, pengakuan
+ditanda dan sambungan sistem sedia.
 
+Nama tidak keluar:
+Taip sekurang-kurangnya dua huruf. Pastikan assets/students.json
+sudah dimuat naik dan senarai telah diaktifkan oleh admin.
 
-PENTING UNTUK DATA MURID
-
-- Pastikan database Google Sheet persendirian. Sistem tidak
-  memerlukan pautan CSV awam untuk menyimpan maklumat kesihatan.
-- Jika database pernah diterbitkan, semak File > Share >
-  Publish to web dan hentikan penerbitan database tersebut.
-- Jangan upload fail Excel asal, rekod kesihatan atau fail senarai
-  PIN sebenar ke GitHub.
-- Jangan hantar senarai semua PIN dalam kumpulan WhatsApp kelas.
-
-
-JIKA ADA MASALAH, SEMAK INI DAHULU
-
-"sediakanSistem tidak ditemui"
-Pastikan kod Code.gs sudah ditampal dan semua fail disimpan.
-
-"BMI_CORE is not defined"
-Fail Core.gs belum dimasukkan atau belum disimpan.
-
-"SKST_STUDENTS is not defined"
-Fail Data.gs belum dimasukkan atau belum disimpan.
-
-"Tetapkan Script Property ADMIN_INITIAL_PASSWORD"
-Mesej ini datang daripada Code.gs lama. Gantikan semua kandungan
-Code.gs dengan fail pembaikan setup-fix-1, simpan dan jalankan
-sediakanSistem semula. Kekalkan fail Core.gs dan Data.gs.
-
-"Nilai ADMIN_INITIAL_PASSWORD terlalu pendek"
-Di Project Settings > Script Properties, padam property
-ADMIN_INITIAL_PASSWORD untuk menggunakan akaun awal, atau isi
-kata laluan sendiri dengan minimum 8 aksara. Kemudian jalankan
-sediakanSistem semula.
-
-"Tidak mempunyai kebenaran mengakses Sheet"
-Gunakan akaun yang boleh menyunting Sheet, kemudian jalankan
-sediakanSistem dan buat deployment menggunakan akaun itu.
-
-"Versi backend masih 1.1.0"
-Gunakan URL deployment baharu pada Langkah 4 dan kemas kini
-config.js yang dimuat naik ke GitHub. Jika mengekalkan deployment
-lama, pilih New version dalam Manage deployments.
-
-"Senarai murid menunggu pengesahan admin"
-Log masuk admin dan klik Sahkan & Aktifkan 314 Murid.
-
-"Nama tidak keluar"
-Taip sekurang-kurangnya dua huruf. Pastikan folder assets bersama
-kandungannya sudah dimuat naik dan senarai sudah diaktifkan admin.
-
-"PIN tidak diterima"
-Gunakan PIN sebenar daripada sekolah. Jika lima cubaan gagal,
-tunggu 15 minit atau minta admin menjana PIN baharu.
-
-"Laman GitHub menunjukkan 404"
-Pastikan index.html berada pada halaman utama repository dan
-Settings > Pages menggunakan branch serta folder yang betul.
-
-
-SELESAI
-
-Pemasangan asas berjaya apabila:
-1. URL Apps Script menunjukkan versi 3.0.0-pin dan configured true.
-2. Admin boleh log masuk dan melihat 314 murid aktif.
-3. Fail PIN boleh dimuat turun oleh admin.
-4. Penjaga boleh memilih nama, membuka borang dengan PIN dan
-   menghantar maklumat yang disahkan tersimpan.
-
-Nota: Semasa pakej asal disediakan, akses terus ke Sheet ditolak.
-Oleh itu, Langkah 3 perlu dijalankan oleh pemilik/editor untuk
-memasukkan daftar sebenar ke database.
+Semua perubahan ini telah diuji secara setempat. Deployment Google
+sebenar perlu dikemas kini oleh pemilik akaun mengikut langkah A.
